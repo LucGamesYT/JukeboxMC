@@ -1,5 +1,7 @@
 package org.jukeboxmc.math;
 
+import org.apache.commons.math3.util.FastMath;
+
 /**
  * @author LucGamesYT
  * @version 1.0
@@ -16,7 +18,7 @@ public class Vector2 {
     }
 
     public static Vector2 getDirection2D( double angle ) {
-        return new Vector2( (float) Math.cos( angle ), (float) Math.sin( angle ) );
+        return new Vector2( (float) FastMath.cos( angle ), (float) Math.sin( angle ) );
     }
 
     public Vector2 add( float x, float z ) {
@@ -42,7 +44,7 @@ public class Vector2 {
     public Vector2 normalize() {
         float len = this.lengthSquared();
         if ( len != 0 ) {
-            return this.divide( (float) Math.sqrt( len ) );
+            return this.divide( (float) FastMath.sqrt( len ) );
         }
 
         return ZERO;

@@ -1,10 +1,13 @@
 package org.jukeboxmc.block;
 
 import org.jukeboxmc.block.type.UpdateReason;
+import org.jukeboxmc.entity.Entity;
 import org.jukeboxmc.event.block.BlockFromToEvent;
 import org.jukeboxmc.event.block.BlockLiquidFlowEvent;
 import org.jukeboxmc.item.ItemWoodenSword;
+import org.jukeboxmc.math.Vector;
 import org.jukeboxmc.utils.Utils;
+import org.jukeboxmc.world.LevelSound;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +42,7 @@ public abstract class BlockLiquid extends Block {
                     this.world.setBlock( this.location, new BlockAir(), 1, true );
                 }
             }
+            this.checkForHarden();
             this.world.scheduleBlockUpdate( this.location, this.getTickRate() );
             return 0;
         } else if ( updateReason == UpdateReason.SCHEDULED ) {
@@ -117,12 +121,26 @@ public abstract class BlockLiquid extends Block {
                         }
                     }
                 }
+                this.checkForHarden();
             }
         }
         return 0;
     }
 
+    @Override
+    public boolean isTransparent() {
+        return true;
+    }
+
+    @Override
+    public boolean canBeFlowedInto() {
+        return true;
+    }
+
     public abstract BlockLiquid getBlock( int liquidDepth );
+
+    protected void checkForHarden() {
+    }
 
     public boolean usesWaterLogging() {
         return false;
@@ -289,21 +307,23 @@ public abstract class BlockLiquid extends Block {
         return cost;
     }
 
-    @Override
-    public boolean isTransparent() {
-        return true;
-    }
-
-    @Override
-    public boolean canBeFlowedInto() {
-        return true;
-    }
-
     public BlockLiquid setLiquidDepth( int value ) {
         return this.setState( "liquid_depth", value );
     }
 
     public int getLiquidDepth() {
         return this.stateExists( "liquid_depth" ) ? this.getIntState( "liquid_depth" ) : 0;
+    }
+
+    protected boolean liquidCollide( Block result ) {
+        BlockFromToEvent event = new BlockFromToEvent( this, result );
+        this.world.getServer().getPluginManager().callEvent( event );
+        if ( event.isCancelled() ) {
+            return false;
+        }
+        //this.world.setBlock( this, event.getTo(), true, true );
+        this.world.setBlock( this.location, event.getBlockTo() );
+        this.world.playSound( this.location.add(0.5f, 0.5f, 0.5f ), LevelSound.FIZZ );
+        return true;
     }
 }

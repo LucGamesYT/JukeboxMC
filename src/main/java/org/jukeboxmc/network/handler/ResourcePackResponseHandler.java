@@ -36,6 +36,8 @@ public class ResourcePackResponseHandler implements PacketHandler {
             startGamePacket.setWorldName( player.getLocation().getWorld().getName() );
             startGamePacket.setWorldSpawn( worldSpawn );
             startGamePacket.setServerEngine( "JukeboxMC" );
+            startGamePacket.setDifficulty( player.getWorld().getDifficulty() );
+
             for ( GameRules gameRules : GameRule.getAll() ) {
                 startGamePacket.getGamerules().put( gameRules.getName(), gameRules );
             }

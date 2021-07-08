@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
 import lombok.ToString;
+import org.apache.commons.math3.util.FastMath;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.WriteBatch;
 import org.jukeboxmc.block.Block;
@@ -279,7 +280,7 @@ public class Chunk extends LevelDBChunk {
             }
 
             float numberOfBits = Utils.log2( indexList.size() ) + 1;
-            int amountOfBlocks = (int) Math.floor( 32 / numberOfBits );
+            int amountOfBlocks = (int) FastMath.floor( 32 / numberOfBits );
             Palette palette = new Palette( buffer, amountOfBlocks, false );
 
             byte paletteWord = (byte) ( (byte) ( palette.getPaletteVersion().getVersionId() << 1 ) | 1 );

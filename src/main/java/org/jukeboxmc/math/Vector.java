@@ -1,6 +1,8 @@
 package org.jukeboxmc.math;
 
 import lombok.ToString;
+import org.apache.commons.math3.util.FastMath;
+import org.jukeboxmc.utils.Utils;
 import org.jukeboxmc.world.Dimension;
 
 /**
@@ -9,6 +11,8 @@ import org.jukeboxmc.world.Dimension;
  */
 @ToString
 public class Vector {
+
+    public static final Vector ZERO = new Vector( 0, 0, 0 );
 
     public static final Vector UP = new Vector( 0, 1, 0 );
     public static final Vector DOWN = new Vector( 0, -1, 0 );
@@ -41,7 +45,7 @@ public class Vector {
     }
 
     public int getFloorX() {
-        return (int) Math.floor( this.x );
+        return (int) FastMath.floor( this.x );
     }
 
     public void setX( float x ) {
@@ -53,7 +57,7 @@ public class Vector {
     }
 
     public int getFloorY() {
-        return (int) Math.floor( this.y );
+        return (int) FastMath.floor( this.y );
     }
 
     public void setY( float y ) {
@@ -65,7 +69,7 @@ public class Vector {
     }
 
     public int getFloorZ() {
-        return (int) Math.floor( this.z );
+        return (int) FastMath.floor( this.z );
     }
 
     public void setZ( float z ) {
@@ -96,12 +100,24 @@ public class Vector {
         return new Vector( this.x - vector.x, this.y - vector.y, this.z - vector.z, vector.dimension );
     }
 
+    public Vector multiply( float x, float y, float z ) {
+        return new Vector( this.x * x, this.y * y, this.z * z );
+    }
+
+    public Vector multiply( Vector vector ) {
+        return this.multiply( vector.x, vector.y, vector.z );
+    }
+
+    public Vector multiply( float value ) {
+        return this.multiply( value, value, value );
+    }
+
     public double distanceSquared( Vector vector ) {
-        return Math.pow( this.x - vector.x, 2 ) + Math.pow( this.y - vector.y, 2 ) + Math.pow( this.z - vector.z, 2 );
+        return FastMath.pow( this.x - vector.x, 2 ) + FastMath.pow( this.y - vector.y, 2 ) + FastMath.pow( this.z - vector.z, 2 );
     }
 
     public double distance( Vector vector ) {
-        return Math.sqrt( this.distanceSquared( vector ) );
+        return FastMath.sqrt( this.distanceSquared( vector ) );
     }
 
     public Vector getVectorWhenXIsOnLine( Vector other, float x ) {
@@ -135,15 +151,15 @@ public class Vector {
         return new Vector( this.x - x, this.y - y, this.z - z, this.dimension );
     }
 
-    public double lengthSquared() {
-        return Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z );
+    public float lengthSquared() {
+        return Utils.sqrt( this.x * this.x + this.y * this.y + this.z * this.z );
     }
 
     public Vector normalize() {
-        double length = this.lengthSquared();
-        this.x /= length;
-        this.y /= length;
-        this.z /= length;
-        return this;
+        float length = this.lengthSquared();
+        if ( length == 0.0 ) {
+            return new Vector( this.x, this.y, this.z );
+        }
+        return new Vector( this.x / length, this.y / length, this.z / length );
     }
 }

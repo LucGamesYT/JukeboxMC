@@ -3,15 +3,16 @@ package org.jukeboxmc.player;
 import lombok.Getter;
 import lombok.Setter;
 import org.jukeboxmc.Server;
+import org.jukeboxmc.entity.Entity;
 import org.jukeboxmc.entity.adventure.AdventureSettings;
 import org.jukeboxmc.entity.attribute.Attribute;
 import org.jukeboxmc.entity.attribute.AttributeType;
-import org.jukeboxmc.entity.attribute.Attributes;
 import org.jukeboxmc.entity.passive.EntityHuman;
 import org.jukeboxmc.event.inventory.InventoryCloseEvent;
 import org.jukeboxmc.event.inventory.InventoryOpenEvent;
 import org.jukeboxmc.event.player.PlayerDisconnectEvent;
 import org.jukeboxmc.inventory.*;
+import org.jukeboxmc.math.AxisAlignedBB;
 import org.jukeboxmc.math.Location;
 import org.jukeboxmc.math.Vector;
 import org.jukeboxmc.network.packet.ChangeDimensionPacket;
@@ -44,8 +45,6 @@ public class Player extends EntityHuman implements InventoryHolder {
     private float headYaw;
 
     private int viewDistance = 16;
-
-    private boolean isOnGround;
     @Getter
     @Setter
     private boolean spawned;
@@ -53,10 +52,8 @@ public class Player extends EntityHuman implements InventoryHolder {
     private Locale locale;
 
     private Server server;
-    private Attributes attributes;
     private AdventureSettings adventureSettings;
     private GameMode gameMode;
-    private DeviceInfo deviceInfo;
     private InetSocketAddress address;
     private PlayerConnection playerConnection;
 
@@ -68,7 +65,6 @@ public class Player extends EntityHuman implements InventoryHolder {
 
     public Player( Server server, Connection connection ) {
         this.server = server;
-        this.attributes = new Attributes();
         this.adventureSettings = new AdventureSettings( this );
         this.gameMode = server.getDefaultGamemode();
         this.address = connection.getSender();
@@ -83,155 +79,36 @@ public class Player extends EntityHuman implements InventoryHolder {
         return this.name;
     }
 
-    public void setName( String name ) {
-        this.name = name;
+    @Override
+    protected Player handleFall() {
+        return this;
     }
 
-    public String getXuid() {
-        return this.xuid;
-    }
+    @Override
+    protected void checkAfterGravity() {
+        float dX = this.getVelocity().getX();
+        float dY = this.getVelocity().getY();
+        float dZ = this.getVelocity().getZ();
 
-    public void setXuid( String xuid ) {
-        this.xuid = xuid;
-    }
+        // Check if we collide with some blocks when we would move that fast
+        List<AxisAlignedBB> collisionList = this.getWorld().collisionCubes(this, this.boundingBox.getOffsetBoundingBox(dX, dY, dZ), false);
+        if (collisionList != null) {
+            // Check if we would hit a y border block
+            for (AxisAlignedBB axisAlignedBB : collisionList) {
+                dY = axisAlignedBB.calculateYOffset(this.boundingBox, dY);
+            }
 
-    public UUID getUUID() {
-        return this.uuid;
-    }
+            if (Math.abs(dY) <= 0.001) {
+                dY = 0;
+            }
 
-    public void setUUID( UUID uuid ) {
-        this.uuid = uuid;
-    }
-
-    public Skin getSkin() {
-        return this.skin;
-    }
-
-    public void setSkin( Skin skin ) {
-        this.skin = skin;
-    }
-
-    public boolean isOnGround() {
-        return isOnGround;
-    }
-
-    public void setOnGround( boolean onGround ) {
-        isOnGround = onGround;
-    }
-
-    public void setLocale( Locale locale ) {
-        this.locale = locale;
-    }
-
-    public Locale getLocale() {
-        return this.locale;
-    }
-
-    public Server getServer() {
-        return this.server;
-    }
-
-    public Attributes getAttributes() {
-        return this.attributes;
-    }
-
-    public Attribute getAttribute( AttributeType attributeType ) {
-        return this.attributes.getAttribute( attributeType );
-    }
-
-    public float getHealth() {
-        return this.getAttribute( AttributeType.HEALTH ).getCurrentValue();
-    }
-
-    public void setHealth( float value ) {
-        if ( value > 20 || value < 0 ) {
-            return;
+            this.setVelocity( new Vector( dX, dY, dZ ), false );
         }
-
-        Attribute attribute = this.getAttribute( AttributeType.HEALTH );
-        attribute.setCurrentValue( value );
-        this.sendattribute( attribute );
-    }
-
-    public boolean isHungry() {
-        Attribute attribute = this.getAttribute( AttributeType.HEALTH );
-        return attribute.getCurrentValue() < attribute.getMaxValue();
-    }
-
-    public float getHunger() {
-        return this.getAttribute( AttributeType.PLAYER_HUNGER ).getCurrentValue();
-    }
-
-    public void setHunger( float value ) {
-        if ( value > 20 || value < 0 ) {
-            return;
-        }
-
-        Attribute attribute = this.getAttribute( AttributeType.PLAYER_HUNGER );
-        attribute.setCurrentValue( value );
-        this.sendattribute( attribute );
-    }
-
-    public AdventureSettings getAdventureSettings() {
-        return this.adventureSettings;
-    }
-
-    public GameMode getGameMode() {
-        return this.gameMode;
-    }
-
-    public void setGameMode( GameMode gameMode ) {
-        this.gameMode = gameMode;
-    }
-
-    public DeviceInfo getDeviceInfo() {
-        return this.deviceInfo;
-    }
-
-    public void setDeviceInfo( DeviceInfo deviceInfo ) {
-        this.deviceInfo = deviceInfo;
-    }
-
-    public InetSocketAddress getAddress() {
-        return this.address;
-    }
-
-    public PlayerConnection getPlayerConnection() {
-        return this.playerConnection;
-    }
-
-    public void setPlayerConnection( PlayerConnection playerConnection ) {
-        this.playerConnection = playerConnection;
-    }
-
-    public List<UUID> getEmotes() {
-        return this.emotes;
-    }
-
-    public void setAddress( InetSocketAddress address ) {
-        this.address = address;
-    }
-
-    public ContainerInventory getCurrentInventory() {
-        return this.currentInventory;
     }
 
     @Override
     public PlayerInventory getInventory() {
         return this.playerInventory;
-    }
-
-    public CursorInventory getCursorInventory() {
-        return this.cursorInventory;
-    }
-
-    public int getViewDistance() {
-        return this.viewDistance;
-    }
-
-    public void setViewDistance( int viewDistance ) {
-        this.viewDistance = viewDistance;
-        this.playerConnection.setViewDistance( viewDistance );
     }
 
     @Override
@@ -264,6 +141,92 @@ public class Player extends EntityHuman implements InventoryHolder {
         this.getChunk().addEntity( this );
         this.playerConnection.spawnToAll();
         this.playerConnection.movePlayer( this.location, PlayerMovePacket.Mode.TELEPORT );
+    }
+
+    @Override
+    protected boolean shouldMove() {
+        return false;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public String getXuid() {
+        return this.xuid;
+    }
+
+    public void setXuid( String xuid ) {
+        this.xuid = xuid;
+    }
+
+    public Skin getSkin() {
+        return this.skin;
+    }
+
+    public void setSkin( Skin skin ) {
+        this.skin = skin;
+    }
+
+    public void setLocale( Locale locale ) {
+        this.locale = locale;
+    }
+
+    public Locale getLocale() {
+        return this.locale;
+    }
+
+    public Server getServer() {
+        return this.server;
+    }
+
+    public AdventureSettings getAdventureSettings() {
+        return this.adventureSettings;
+    }
+
+    public GameMode getGameMode() {
+        return this.gameMode;
+    }
+
+    public void setGameMode( GameMode gameMode ) {
+        this.gameMode = gameMode;
+    }
+
+    public InetSocketAddress getAddress() {
+        return this.address;
+    }
+
+    public PlayerConnection getPlayerConnection() {
+        return this.playerConnection;
+    }
+
+    public void setPlayerConnection( PlayerConnection playerConnection ) {
+        this.playerConnection = playerConnection;
+    }
+
+    public List<UUID> getEmotes() {
+        return this.emotes;
+    }
+
+    public void setAddress( InetSocketAddress address ) {
+        this.address = address;
+    }
+
+    public ContainerInventory getCurrentInventory() {
+        return this.currentInventory;
+    }
+
+    public CursorInventory getCursorInventory() {
+        return this.cursorInventory;
+    }
+
+    public int getViewDistance() {
+        return this.viewDistance;
+    }
+
+    public void setViewDistance( int viewDistance ) {
+        this.viewDistance = viewDistance;
+        this.playerConnection.setViewDistance( viewDistance );
     }
 
     public void disconnect( String message ) {

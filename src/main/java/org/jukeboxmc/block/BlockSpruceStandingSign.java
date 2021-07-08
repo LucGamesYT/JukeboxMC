@@ -1,5 +1,6 @@
 package org.jukeboxmc.block;
 
+import org.apache.commons.math3.util.FastMath;
 import org.jukeboxmc.block.direction.BlockFace;
 import org.jukeboxmc.block.direction.SignDirection;
 import org.jukeboxmc.blockentity.BlockEntitySign;
@@ -24,7 +25,7 @@ public class BlockSpruceStandingSign extends BlockSign {
     public boolean placeBlock( Player player, World world, Vector blockPosition, Vector placePosition, Vector clickedPosition, Item itemIndHand, BlockFace blockFace ) {
         Block block = world.getBlock( placePosition );
         if ( blockFace == BlockFace.UP ) {
-            this.setSignDirection( SignDirection.values()[(int) Math.floor( ( ( player.getLocation().getYaw() + 180 ) * 16 / 360 ) + 0.5 ) & 0x0f] );
+            this.setSignDirection( SignDirection.values()[(int) FastMath.floor( ( ( player.getLocation().getYaw() + 180 ) * 16 / 360 ) + 0.5 ) & 0x0f] );
             world.setBlock( placePosition, this );
         } else {
             BlockSpruceWallSign blockWallSign = new BlockSpruceWallSign();

@@ -504,6 +504,7 @@ public class BinaryStream {
 
             if ( nbtSize > 0 ) {
                 nbt = (NbtMap) NbtUtils.createReaderLE( stream ).readTag();
+                System.out.println("HAS");
             } else if ( nbtSize == -1 ) {
                 int tagCount = stream.readUnsignedByte();
 

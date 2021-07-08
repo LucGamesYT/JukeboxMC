@@ -180,30 +180,33 @@ public class Server {
     }
 
     private void tickProcess() {
-        if ( this.isShutdown && !this.tickFuture.isCancelled() ) {
-            this.tickFuture.cancel( false );
-            this.listener.shutdown();
-        }
-
-        this.scheduler.onTick( ++this.currentTick );
-
-        for ( Player player : this.players.values() ) {
-            if ( player.isSpawned() ) {
-                player.getPlayerConnection().update( this.currentTick );
-
+        try {
+            if ( this.isShutdown && !this.tickFuture.isCancelled() ) {
+                this.tickFuture.cancel( false );
+                this.listener.shutdown();
             }
-        }
 
-        for ( World world : this.getWorlds() ) {
-            if ( world != null ) {
-                world.update( this.currentTick );
+            this.scheduler.onTick( ++this.currentTick );
+
+            for ( Player player : this.players.values() ) {
+                if ( player.isSpawned() ) {
+                    player.getPlayerConnection().update( this.currentTick );
+
+                }
             }
-        }
 
-        for ( Player player : this.players.values() ) {
-            player.getPlayerConnection().updateNetwork( this.currentTick );
-        }
+            for ( World world : this.getWorlds() ) {
+                if ( world != null ) {
+                    world.update( this.currentTick );
+                }
+            }
 
+            for ( Player player : this.players.values() ) {
+                player.getPlayerConnection().updateNetwork( this.currentTick );
+            }
+        } catch ( Exception ex ) {
+            ex.printStackTrace();
+        }
     }
 
     private void initServerConfig() {

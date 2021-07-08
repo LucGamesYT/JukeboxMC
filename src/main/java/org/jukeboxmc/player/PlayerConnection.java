@@ -1,12 +1,12 @@
 package org.jukeboxmc.player;
 
 import org.jukeboxmc.Server;
+import org.jukeboxmc.entity.Entity;
 import org.jukeboxmc.entity.adventure.AdventureSettings;
 import org.jukeboxmc.entity.attribute.Attribute;
 import org.jukeboxmc.event.player.PlayerQuitEvent;
 import org.jukeboxmc.inventory.Inventory;
 import org.jukeboxmc.inventory.WindowId;
-import org.jukeboxmc.item.ItemType;
 import org.jukeboxmc.logger.Logger;
 import org.jukeboxmc.math.Location;
 import org.jukeboxmc.math.Vector;
@@ -21,10 +21,7 @@ import org.jukeboxmc.world.Sound;
 import org.jukeboxmc.world.World;
 import org.jukeboxmc.world.chunk.Chunk;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -76,7 +73,35 @@ public class PlayerConnection {
                 } );
             }
         }
+
+        this.updateAttributes();
         this.needNewChunks();
+
+        Collection<Entity> nearbyEntities = this.player.getWorld().getNearbyEntities( this.player.getBoundingBox().grow( 1, 0.5f, 1 ), this.player.getDimension(), null );
+        if ( nearbyEntities != null ) {
+            for ( Entity nearbyEntity : nearbyEntities ) {
+                nearbyEntity.onCollideWithPlayer( this.player );
+            }
+        }
+    }
+
+    private void updateAttributes() {
+        UpdateAttributesPacket updateAttributesPacket = null;
+        for ( Attribute attribute : this.player.getAttributes() ) {
+            if ( attribute.isDirty() ) {
+                if ( updateAttributesPacket == null ) {
+                    updateAttributesPacket = new UpdateAttributesPacket();
+                    updateAttributesPacket.setEntityId( this.player.getEntityId() );
+                }
+                updateAttributesPacket.addAttributes( attribute );
+            }
+        }
+
+        if ( updateAttributesPacket != null ) {
+            updateAttributesPacket.setTick( this.player.getWorld().getCurrentTick() / 50 );
+            this.sendPacket( updateAttributesPacket );
+            System.out.println("SEND ATTRIBUTE");
+        }
     }
 
     public void updateNetwork( long currentTick ) {
@@ -325,7 +350,7 @@ public class PlayerConnection {
         UpdateAttributesPacket attributesPacket = new UpdateAttributesPacket();
         attributesPacket.setEntityId( this.player.getEntityId() );
         attributesPacket.setAttributes( attributes );
-        attributesPacket.setTick( 0 ); //TODO
+        attributesPacket.setTick( this.player.getWorld().getCurrentTick() / 50 );
         this.sendPacket( attributesPacket );
     }
 
@@ -333,7 +358,7 @@ public class PlayerConnection {
         UpdateAttributesPacket attributesPacket = new UpdateAttributesPacket();
         attributesPacket.setEntityId( this.player.getEntityId() );
         attributesPacket.setAttributes( Collections.singletonList( attribute ) );
-        attributesPacket.setTick( 0 ); //TODO
+        attributesPacket.setTick( this.player.getWorld().getCurrentTick() / 50 );
         this.sendPacket( attributesPacket );
     }
 
@@ -341,7 +366,7 @@ public class PlayerConnection {
         SetEntityDataPacket setEntityDataPacket = new SetEntityDataPacket();
         setEntityDataPacket.setEntityId( this.player.getEntityId() );
         setEntityDataPacket.setMetadata( this.player.getMetadata() );
-        setEntityDataPacket.setTick( 0 );
+        setEntityDataPacket.setTick( this.player.getWorld().getCurrentTick() / 50 );
         this.sendPacket( setEntityDataPacket );
     }
 
@@ -405,23 +430,7 @@ public class PlayerConnection {
 
     public void spawnPlayer( Player player ) {
         if ( this.player != player ) {
-            AddPlayerPacket addPlayerPacket = new AddPlayerPacket();
-            addPlayerPacket.setUuid( player.getUUID() );
-            addPlayerPacket.setName( player.getName() );
-            addPlayerPacket.setEntityId( player.getEntityId() );
-            addPlayerPacket.setRuntimeEntityId( player.getEntityId() );
-            addPlayerPacket.setPlatformChatId( player.getDeviceInfo().getDeviceId() );
-            addPlayerPacket.setX( player.getX() );
-            addPlayerPacket.setY( player.getY() );
-            addPlayerPacket.setZ( player.getZ() );
-            addPlayerPacket.setVelocity( new Vector( 0, 0, 0 ) );
-            addPlayerPacket.setPitch( player.getPitch() );
-            addPlayerPacket.setHeadYaw( player.getHeadYaw() );
-            addPlayerPacket.setYaw( player.getYaw() );
-            addPlayerPacket.setItem( ItemType.AIR.getItem() );
-            addPlayerPacket.setMetadata( player.getMetadata() );
-            addPlayerPacket.setDeviceInfo( player.getDeviceInfo() );
-            this.sendPacket( addPlayerPacket );
+            this.sendPacket( player.createSpawnPacket() );
         }
     }
 
@@ -456,7 +465,7 @@ public class PlayerConnection {
 
         this.sendTime( 1000 );
         this.sendAdventureSettings();
-        this.sendAttributes( this.player.getAttributes().getAttributes() );
+        this.sendAttributes( new ArrayList<>( this.player.getAttributes() ) );
         this.sendStatus( PlayStatusPacket.Status.PLAYER_SPAWN );
         this.sendMetadata();
 

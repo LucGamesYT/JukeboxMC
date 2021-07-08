@@ -1,5 +1,6 @@
 package org.jukeboxmc.player;
 
+import org.apache.commons.math3.util.FastMath;
 import org.jukeboxmc.Server;
 import org.jukeboxmc.utils.Utils;
 
@@ -32,8 +33,8 @@ public class PlayerChunkManager {
         for ( long chunkKey : CHUNK_KEYS ) {
             int sendXChunk = Utils.fromHashX( chunkKey );
             int sendZChunk = Utils.fromHashZ( chunkKey );
-            double distance = Math.sqrt( sendZChunk * sendZChunk + sendXChunk * sendXChunk );
-            long chunkDistance = Math.round( distance );
+            double distance = FastMath.sqrt( sendZChunk * sendZChunk + sendXChunk * sendXChunk );
+            long chunkDistance = FastMath.round( distance );
 
             if ( chunkDistance <= viewDistance ) {
                 chunks.add( Utils.toLong( sendXChunk + centerX, sendZChunk + centerZ ) );

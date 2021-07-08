@@ -6,7 +6,7 @@ import org.jukeboxmc.item.ItemWater;
  * @author LucGamesYT
  * @version 1.0
  */
-public class BlockFlowingWater extends BlockLiquid {
+public class BlockFlowingWater extends BlockWater {
 
     public BlockFlowingWater() {
         super( "minecraft:flowing_water" );

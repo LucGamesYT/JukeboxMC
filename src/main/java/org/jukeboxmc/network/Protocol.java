@@ -58,6 +58,8 @@ public interface Protocol {
     byte SET_DIFFICULTY_PACKET = 0x3c;
     byte SPAWN_PARTICLE_EFFECT_PACKET = 0x76;
     byte CHANGE_DIMENSION_PACKET = 0x3d;
+    byte ADD_ITEM_ENTITY_PACKET = 0x0f;
+    byte ENTITY_VELOCITY_PACKET = 0x28;
 
     //Raknet
     byte CONNECTED_PING = 0x00;

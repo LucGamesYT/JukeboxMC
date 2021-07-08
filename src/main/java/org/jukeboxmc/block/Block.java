@@ -6,6 +6,7 @@ import org.jukeboxmc.block.direction.BlockFace;
 import org.jukeboxmc.block.direction.Direction;
 import org.jukeboxmc.block.type.UpdateReason;
 import org.jukeboxmc.blockentity.BlockEntity;
+import org.jukeboxmc.entity.Entity;
 import org.jukeboxmc.item.Item;
 import org.jukeboxmc.math.AxisAlignedBB;
 import org.jukeboxmc.math.Location;
@@ -164,6 +165,8 @@ public abstract class Block implements Cloneable {
 
     public abstract BlockType getBlockType();
 
+    public void onEntityCollision( Entity entity ) {}
+
     public Block getSide( Direction direction, int layer ) {
         switch ( direction ) {
             case SOUTH:
@@ -315,6 +318,14 @@ public abstract class Block implements Cloneable {
 
     public boolean canBeFlowedInto() {
         return false;
+    }
+
+    public boolean canPassThrough() {
+        return false;
+    }
+
+    public Vector addVelocity(Entity entity, Vector pushedByBlocks) {
+        return pushedByBlocks;
     }
 
     public final boolean canWaterloggingFlowInto() {
