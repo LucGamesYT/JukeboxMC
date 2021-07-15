@@ -58,6 +58,9 @@ public interface Protocol {
     byte SET_DIFFICULTY_PACKET = 0x3c;
     byte SPAWN_PARTICLE_EFFECT_PACKET = 0x76;
     byte CHANGE_DIMENSION_PACKET = 0x3d;
+    byte SET_COMMANDS_ENABLED_PACKET = 0x3b;
+    byte AVAILABLE_COMMANDS_PACKET = 0x4c;
+    byte COMMAND_REQUEST_PACKET = 0x4d;
     byte SIMULATION_TYPE_PACKET = (byte) 0xa8;
     byte NPC_DIALOGUE_PACKET = (byte) 0xa9;
 
